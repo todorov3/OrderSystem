@@ -12,6 +12,6 @@
         public bool IsDeleted { get; set; }
         public Brand Brand { get; set; }
         public Category Category { get; set; }
-        public Type Type { get; set; }
+        public ProductType Type { get; set; }
     }
 }

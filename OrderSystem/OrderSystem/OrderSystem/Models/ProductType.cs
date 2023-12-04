@@ -1,6 +1,6 @@
 ﻿namespace OrderSystem.Models
 {
-    public class Type
+    public class ProductType
     {
         public int Id { get; set; }
         public string Name { get; set; }
