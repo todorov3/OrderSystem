@@ -9,7 +9,7 @@ namespace OrderSystem.Repository
 {
     public class CustomerRepository : ICustomerRepository
     {
-        private DapperContext _dapperContext;
+        private readonly DapperContext _dapperContext;
 
         public CustomerRepository(DapperContext dapperContext)
         {
@@ -54,13 +54,11 @@ namespace OrderSystem.Repository
 
             using var connection = _dapperContext.CreateConnection();
             {
-
-
-            var customer = await connection.QuerySingleOrDefaultAsync<Customer>(
-                "spCustomerGetByEmail",
-                parameters,
-                commandType:
-                CommandType.StoredProcedure);
+                var customer = await connection.QuerySingleOrDefaultAsync<Customer>(
+                    "spCustomerGetByEmail",
+                    parameters,
+                    commandType:
+                    CommandType.StoredProcedure);
 
                 return customer ?? throw new EntityNotFoundException("Customer not found.");
             }
