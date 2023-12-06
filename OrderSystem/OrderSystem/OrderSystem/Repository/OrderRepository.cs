@@ -10,10 +10,12 @@ namespace OrderSystem.Repository
     public class OrderRepository : IOrderRepository
     {
         private readonly DapperContext _dapperContext;
+        private readonly IProductRepository _productRepository;
 
-        public OrderRepository(DapperContext dapperContext)
+        public OrderRepository(DapperContext dapperContext, IProductRepository productRepository)
         {
             _dapperContext = dapperContext;
+            _productRepository = productRepository;
         }
 
         public async Task<int> CreateOrder()
@@ -35,7 +37,30 @@ namespace OrderSystem.Repository
 
         public async Task AddProductToOrder(int orderId, int productId)
         {
+            var existingOrder = await GetOrderById(orderId);
+            if (existingOrder == null || existingOrder.IsDeleted == true)
+            {
+                throw new EntityNotFoundException($"Order with id {orderId} not found.");
+            }
 
+            var productToAdd = _productRepository.GetProductById(productId);
+            if (productToAdd == null || productToAdd.IsDeleted == true)
+            {
+                throw new EntityNotFoundException($"Product with id {productId} not found.");
+            }
+
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("OrderId", orderId, DbType.Int32);
+            parameters.Add("ProductId", productId, DbType.Int32);
+
+            using var connection = _dapperContext.CreateConnection();
+            {
+                await connection.ExecuteAsync(
+                    "spProductAddToOrder",
+                    parameters,
+                    commandType:
+                    CommandType.StoredProcedure);
+            }
         }
 
         public async Task<List<Order>> GetAllOrdes()
@@ -62,6 +87,21 @@ namespace OrderSystem.Repository
                     CommandType.StoredProcedure);
 
                 return order ?? throw new EntityNotFoundException($"Order with id {id} not found");
+            }
+        }
+
+        public async Task DeleteOrder(int id)
+        {
+            DynamicParameters parameters = new DynamicParameters();
+            parameters.Add("Id", id);
+
+            using var connection = _dapperContext.CreateConnection();
+            {
+                await connection.ExecuteAsync(
+                    "spOrderDelete",
+                    parameters,
+                    commandType:
+                    CommandType.StoredProcedure);
             }
         }
     }
